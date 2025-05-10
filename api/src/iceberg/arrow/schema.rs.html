@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/iceberg/src/arrow/schema.rs`."><title>schema.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="iceberg" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (a70b2ae57 2024-06-09)" data-channel="nightly" data-search-js="search-0fe7219eb170c82e.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/iceberg/src/arrow/schema.rs`."><title>schema.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="iceberg" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (b19329a37 2024-11-21)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">iceberg/arrow/</div>schema.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1682,7 +1683,14 @@
 <a href="#1682" id="1682">1682</a>
 <a href="#1683" id="1683">1683</a>
 <a href="#1684" id="1684">1684</a>
-</pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
+<a href="#1685" id="1685">1685</a>
+<a href="#1686" id="1686">1686</a>
+<a href="#1687" id="1687">1687</a>
+<a href="#1688" id="1688">1688</a>
+<a href="#1689" id="1689">1689</a>
+<a href="#1690" id="1690">1690</a>
+<a href="#1691" id="1691">1691</a>
+<a href="#1692" id="1692">1692</a></pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
 // regarding copyright ownership.  The ASF licenses this file
@@ -1712,7 +1720,6 @@
     Int64Array, PrimitiveArray, Scalar, StringArray, TimestampMicrosecondArray,
 };
 <span class="kw">use </span>arrow_schema::{DataType, Field, Fields, Schema <span class="kw">as </span>ArrowSchema, TimeUnit};
-<span class="kw">use </span>bitvec::macros::internal::funty::Fundamental;
 <span class="kw">use </span>num_bigint::BigInt;
 <span class="kw">use </span>parquet::arrow::PARQUET_FIELD_ID_META_KEY;
 <span class="kw">use </span>parquet::file::statistics::Statistics;
@@ -1852,6 +1859,7 @@
             )),
         },
         DataType::Struct(fields) =&gt; visit_struct(fields, visitor),
+        DataType::Dictionary(_key_type, value_type) =&gt; visit_type(value_type, visitor),
         other =&gt; <span class="prelude-val">Err</span>(Error::new(
             ErrorKind::DataInvalid,
             <span class="macro">format!</span>(<span class="string">"Cannot visit Arrow data type: {other}"</span>),
@@ -2346,10 +2354,10 @@
             <span class="prelude-val">Ok</span>(Box::new(Int64Array::new_scalar(<span class="kw-2">*</span>value)))
         }
         (PrimitiveType::Float, PrimitiveLiteral::Float(value)) =&gt; {
-            <span class="prelude-val">Ok</span>(Box::new(Float32Array::new_scalar(value.as_f32())))
+            <span class="prelude-val">Ok</span>(Box::new(Float32Array::new_scalar(value.to_f32().unwrap())))
         }
         (PrimitiveType::Double, PrimitiveLiteral::Double(value)) =&gt; {
-            <span class="prelude-val">Ok</span>(Box::new(Float64Array::new_scalar(value.as_f64())))
+            <span class="prelude-val">Ok</span>(Box::new(Float64Array::new_scalar(value.to_f64().unwrap())))
         }
         (PrimitiveType::String, PrimitiveLiteral::String(value)) =&gt; {
             <span class="prelude-val">Ok</span>(Box::new(StringArray::new_scalar(value.as_str())))
@@ -2714,6 +2722,7 @@
             Arc::new(simple_field(DEFAULT_MAP_FIELD_NAME, r#struct, <span class="bool-val">false</span>, <span class="string">"17"</span>)),
             <span class="bool-val">false</span>,
         );
+        <span class="kw">let </span>dictionary = DataType::Dictionary(Box::new(DataType::Int32), Box::new(DataType::Utf8));
 
         <span class="kw">let </span>fields = Fields::from(<span class="macro">vec!</span>[
             simple_field(<span class="string">"aa"</span>, DataType::Int32, <span class="bool-val">false</span>, <span class="string">"18"</span>),
@@ -2793,6 +2802,7 @@
             ),
             simple_field(<span class="string">"map"</span>, map, <span class="bool-val">false</span>, <span class="string">"16"</span>),
             simple_field(<span class="string">"struct"</span>, r#struct, <span class="bool-val">false</span>, <span class="string">"17"</span>),
+            simple_field(<span class="string">"dictionary"</span>, dictionary, <span class="bool-val">false</span>, <span class="string">"30"</span>),
         ])
     }
 
@@ -2970,6 +2980,12 @@
                             }
                         ]
                     }
+                },
+                {
+                    "id":30,
+                    "name":"dictionary",
+                    "required":true,
+                    "type":"string"
                 }
             ],
             "identifier-field-ids":[]
@@ -2984,7 +3000,7 @@
         <span class="kw">let </span>arrow_schema = arrow_schema_for_arrow_schema_to_schema_test();
         <span class="kw">let </span>schema = iceberg_schema_for_arrow_schema_to_schema_test();
         <span class="kw">let </span>converted_schema = arrow_schema_to_schema(<span class="kw-2">&amp;</span>arrow_schema).unwrap();
-        <span class="macro">assert_eq!</span>(converted_schema, schema);
+        <span class="macro">pretty_assertions::assert_eq!</span>(converted_schema, schema);
     }
 
     <span class="kw">fn </span>arrow_schema_for_schema_to_arrow_schema_test() -&gt; ArrowSchema {

@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/iceberg/src/writer/file_writer/parquet_writer.rs`."><title>parquet_writer.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="iceberg" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (a70b2ae57 2024-06-09)" data-channel="nightly" data-search-js="search-0fe7219eb170c82e.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/iceberg/src/writer/file_writer/parquet_writer.rs`."><title>parquet_writer.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="iceberg" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (b19329a37 2024-11-21)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">iceberg/writer/file_writer/</div>parquet_writer.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -2170,7 +2171,106 @@
 <a href="#2170" id="2170">2170</a>
 <a href="#2171" id="2171">2171</a>
 <a href="#2172" id="2172">2172</a>
-</pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
+<a href="#2173" id="2173">2173</a>
+<a href="#2174" id="2174">2174</a>
+<a href="#2175" id="2175">2175</a>
+<a href="#2176" id="2176">2176</a>
+<a href="#2177" id="2177">2177</a>
+<a href="#2178" id="2178">2178</a>
+<a href="#2179" id="2179">2179</a>
+<a href="#2180" id="2180">2180</a>
+<a href="#2181" id="2181">2181</a>
+<a href="#2182" id="2182">2182</a>
+<a href="#2183" id="2183">2183</a>
+<a href="#2184" id="2184">2184</a>
+<a href="#2185" id="2185">2185</a>
+<a href="#2186" id="2186">2186</a>
+<a href="#2187" id="2187">2187</a>
+<a href="#2188" id="2188">2188</a>
+<a href="#2189" id="2189">2189</a>
+<a href="#2190" id="2190">2190</a>
+<a href="#2191" id="2191">2191</a>
+<a href="#2192" id="2192">2192</a>
+<a href="#2193" id="2193">2193</a>
+<a href="#2194" id="2194">2194</a>
+<a href="#2195" id="2195">2195</a>
+<a href="#2196" id="2196">2196</a>
+<a href="#2197" id="2197">2197</a>
+<a href="#2198" id="2198">2198</a>
+<a href="#2199" id="2199">2199</a>
+<a href="#2200" id="2200">2200</a>
+<a href="#2201" id="2201">2201</a>
+<a href="#2202" id="2202">2202</a>
+<a href="#2203" id="2203">2203</a>
+<a href="#2204" id="2204">2204</a>
+<a href="#2205" id="2205">2205</a>
+<a href="#2206" id="2206">2206</a>
+<a href="#2207" id="2207">2207</a>
+<a href="#2208" id="2208">2208</a>
+<a href="#2209" id="2209">2209</a>
+<a href="#2210" id="2210">2210</a>
+<a href="#2211" id="2211">2211</a>
+<a href="#2212" id="2212">2212</a>
+<a href="#2213" id="2213">2213</a>
+<a href="#2214" id="2214">2214</a>
+<a href="#2215" id="2215">2215</a>
+<a href="#2216" id="2216">2216</a>
+<a href="#2217" id="2217">2217</a>
+<a href="#2218" id="2218">2218</a>
+<a href="#2219" id="2219">2219</a>
+<a href="#2220" id="2220">2220</a>
+<a href="#2221" id="2221">2221</a>
+<a href="#2222" id="2222">2222</a>
+<a href="#2223" id="2223">2223</a>
+<a href="#2224" id="2224">2224</a>
+<a href="#2225" id="2225">2225</a>
+<a href="#2226" id="2226">2226</a>
+<a href="#2227" id="2227">2227</a>
+<a href="#2228" id="2228">2228</a>
+<a href="#2229" id="2229">2229</a>
+<a href="#2230" id="2230">2230</a>
+<a href="#2231" id="2231">2231</a>
+<a href="#2232" id="2232">2232</a>
+<a href="#2233" id="2233">2233</a>
+<a href="#2234" id="2234">2234</a>
+<a href="#2235" id="2235">2235</a>
+<a href="#2236" id="2236">2236</a>
+<a href="#2237" id="2237">2237</a>
+<a href="#2238" id="2238">2238</a>
+<a href="#2239" id="2239">2239</a>
+<a href="#2240" id="2240">2240</a>
+<a href="#2241" id="2241">2241</a>
+<a href="#2242" id="2242">2242</a>
+<a href="#2243" id="2243">2243</a>
+<a href="#2244" id="2244">2244</a>
+<a href="#2245" id="2245">2245</a>
+<a href="#2246" id="2246">2246</a>
+<a href="#2247" id="2247">2247</a>
+<a href="#2248" id="2248">2248</a>
+<a href="#2249" id="2249">2249</a>
+<a href="#2250" id="2250">2250</a>
+<a href="#2251" id="2251">2251</a>
+<a href="#2252" id="2252">2252</a>
+<a href="#2253" id="2253">2253</a>
+<a href="#2254" id="2254">2254</a>
+<a href="#2255" id="2255">2255</a>
+<a href="#2256" id="2256">2256</a>
+<a href="#2257" id="2257">2257</a>
+<a href="#2258" id="2258">2258</a>
+<a href="#2259" id="2259">2259</a>
+<a href="#2260" id="2260">2260</a>
+<a href="#2261" id="2261">2261</a>
+<a href="#2262" id="2262">2262</a>
+<a href="#2263" id="2263">2263</a>
+<a href="#2264" id="2264">2264</a>
+<a href="#2265" id="2265">2265</a>
+<a href="#2266" id="2266">2266</a>
+<a href="#2267" id="2267">2267</a>
+<a href="#2268" id="2268">2268</a>
+<a href="#2269" id="2269">2269</a>
+<a href="#2270" id="2270">2270</a>
+<a href="#2271" id="2271">2271</a>
+<a href="#2272" id="2272">2272</a></pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
 // regarding copyright ownership.  The ASF licenses this file
@@ -2216,10 +2316,11 @@
 };
 <span class="kw">use </span><span class="kw">crate</span>::io::{FileIO, FileWrite, OutputFile};
 <span class="kw">use </span><span class="kw">crate</span>::spec::{
-    visit_schema, DataContentType, DataFileBuilder, DataFileFormat, Datum, ListType, MapType,
-    NestedFieldRef, PrimitiveType, Schema, SchemaRef, SchemaVisitor, Struct, StructType,
-    TableMetadata, Type,
+    visit_schema, DataContentType, DataFileBuilder, DataFileFormat, Datum, ListType, Literal,
+    MapType, NestedFieldRef, PartitionSpec, PrimitiveType, Schema, SchemaRef, SchemaVisitor,
+    Struct, StructType, TableMetadata, Type,
 };
+<span class="kw">use </span><span class="kw">crate</span>::transform::create_transform_function;
 <span class="kw">use </span><span class="kw">crate</span>::writer::{CurrentFileStatus, DataFile};
 <span class="kw">use crate</span>::{Error, ErrorKind, <span class="prelude-ty">Result</span>};
 
@@ -2630,6 +2731,54 @@
 
         <span class="prelude-val">Ok</span>(builder)
     }
+
+    <span class="attr">#[allow(dead_code)]
+    </span><span class="kw">fn </span>partition_value_from_bounds(
+        table_spec: Arc&lt;PartitionSpec&gt;,
+        lower_bounds: <span class="kw-2">&amp;</span>HashMap&lt;i32, Datum&gt;,
+        upper_bounds: <span class="kw-2">&amp;</span>HashMap&lt;i32, Datum&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Struct&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>partition_literals: Vec&lt;<span class="prelude-ty">Option</span>&lt;Literal&gt;&gt; = Vec::new();
+
+        <span class="kw">for </span>field <span class="kw">in </span>table_spec.fields() {
+            <span class="kw">if let </span>(<span class="prelude-val">Some</span>(lower), <span class="prelude-val">Some</span>(upper)) = (
+                lower_bounds.get(<span class="kw-2">&amp;</span>field.source_id),
+                upper_bounds.get(<span class="kw-2">&amp;</span>field.source_id),
+            ) {
+                <span class="kw">if </span>!field.transform.preserves_order() {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
+                        ErrorKind::DataInvalid,
+                        <span class="macro">format!</span>(
+                            <span class="string">"cannot infer partition value for non linear partition field (needs to preserve order): {} with transform {}"</span>,
+                            field.name, field.transform
+                        ),
+                    ));
+                }
+
+                <span class="kw">if </span>lower != upper {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
+                        ErrorKind::DataInvalid,
+                        <span class="macro">format!</span>(
+                            <span class="string">"multiple partition values for field {}: lower: {:?}, upper: {:?}"</span>,
+                            field.name, lower, upper
+                        ),
+                    ));
+                }
+
+                <span class="kw">let </span>transform_fn = create_transform_function(<span class="kw-2">&amp;</span>field.transform)<span class="question-mark">?</span>;
+                <span class="kw">let </span>transform_literal =
+                    Literal::from(transform_fn.transform_literal_result(lower)<span class="question-mark">?</span>);
+
+                partition_literals.push(<span class="prelude-val">Some</span>(transform_literal));
+            } <span class="kw">else </span>{
+                partition_literals.push(<span class="prelude-val">None</span>);
+            }
+        }
+
+        <span class="kw">let </span>partition_struct = Struct::from_iter(partition_literals);
+
+        <span class="prelude-val">Ok</span>(partition_struct)
+    }
 }
 
 <span class="kw">impl </span>FileWriter <span class="kw">for </span>ParquetWriter {
@@ -2677,7 +2826,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">async fn </span>close(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::Result&lt;Vec&lt;<span class="kw">crate</span>::spec::DataFileBuilder&gt;&gt; {
+    <span class="kw">async fn </span>close(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;DataFileBuilder&gt;&gt; {
         <span class="kw">let </span>writer = <span class="kw">match </span><span class="self">self</span>.inner_writer.take() {
             <span class="prelude-val">Some</span>(writer) =&gt; writer,
             <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[]),
@@ -2689,22 +2838,33 @@
 
         <span class="kw">let </span>written_size = <span class="self">self</span>.written_size.load(std::sync::atomic::Ordering::Relaxed);
 
-        <span class="kw">let </span>parquet_metadata =
-            Arc::new(<span class="self">self</span>.thrift_to_parquet_metadata(metadata).map_err(|err| {
+        <span class="kw">if </span><span class="self">self</span>.current_row_num == <span class="number">0 </span>{
+            <span class="self">self</span>.out_file.delete().<span class="kw">await</span>.map_err(|err| {
                 Error::new(
                     ErrorKind::Unexpected,
-                    <span class="string">"Failed to convert metadata from thrift to parquet."</span>,
+                    <span class="string">"Failed to delete empty parquet file."</span>,
                 )
                 .with_source(err)
-            })<span class="question-mark">?</span>);
+            })<span class="question-mark">?</span>;
+            <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[])
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>parquet_metadata =
+                Arc::new(<span class="self">self</span>.thrift_to_parquet_metadata(metadata).map_err(|err| {
+                    Error::new(
+                        ErrorKind::Unexpected,
+                        <span class="string">"Failed to convert metadata from thrift to parquet."</span>,
+                    )
+                    .with_source(err)
+                })<span class="question-mark">?</span>);
 
-        <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[<span class="self">Self</span>::parquet_to_data_file_builder(
-            <span class="self">self</span>.schema,
-            parquet_metadata,
-            written_size <span class="kw">as </span>usize,
-            <span class="self">self</span>.out_file.location().to_string(),
-            <span class="self">self</span>.nan_value_count_visitor.nan_value_counts,
-        )<span class="question-mark">?</span>])
+            <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[<span class="self">Self</span>::parquet_to_data_file_builder(
+                <span class="self">self</span>.schema,
+                parquet_metadata,
+                written_size <span class="kw">as </span>usize,
+                <span class="self">self</span>.out_file.location().to_string(),
+                <span class="self">self</span>.nan_value_count_visitor.nan_value_counts,
+            )<span class="question-mark">?</span>])
+        }
     }
 }
 
@@ -4340,6 +4500,46 @@
         check_parquet_data_file(<span class="kw-2">&amp;</span>file_io, <span class="kw-2">&amp;</span>data_file, <span class="kw-2">&amp;</span>expect_batch).<span class="kw">await</span>;
 
         <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="attr">#[tokio::test]
+    </span><span class="kw">async fn </span>test_write_empty_parquet_file() {
+        <span class="kw">let </span>temp_dir = TempDir::new().unwrap();
+        <span class="kw">let </span>file_io = FileIOBuilder::new_fs_io().build().unwrap();
+        <span class="kw">let </span>location_gen =
+            MockLocationGenerator::new(temp_dir.path().to_str().unwrap().to_string());
+        <span class="kw">let </span>file_name_gen =
+            DefaultFileNameGenerator::new(<span class="string">"test"</span>.to_string(), <span class="prelude-val">None</span>, DataFileFormat::Parquet);
+
+        <span class="comment">// write data
+        </span><span class="kw">let </span>pw = ParquetWriterBuilder::new(
+            WriterProperties::builder().build(),
+            Arc::new(
+                Schema::builder()
+                    .with_schema_id(<span class="number">1</span>)
+                    .with_fields(<span class="macro">vec!</span>[NestedField::required(
+                        <span class="number">0</span>,
+                        <span class="string">"col"</span>,
+                        Type::Primitive(PrimitiveType::Long),
+                    )
+                    .with_id(<span class="number">0</span>)
+                    .into()])
+                    .build()
+                    .expect(<span class="string">"Failed to create schema"</span>),
+            ),
+            file_io.clone(),
+            location_gen,
+            file_name_gen,
+        )
+        .build()
+        .<span class="kw">await
+        </span>.unwrap();
+
+        <span class="kw">let </span>res = pw.close().<span class="kw">await</span>.unwrap();
+        <span class="macro">assert_eq!</span>(res.len(), <span class="number">0</span>);
+
+        <span class="comment">// Check that file should have been deleted.
+        </span><span class="macro">assert_eq!</span>(std::fs::read_dir(temp_dir.path()).unwrap().count(), <span class="number">0</span>);
     }
 }
 </code></pre></div></section></main></body></html>
